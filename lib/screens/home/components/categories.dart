@@ -20,7 +20,7 @@ class _CategoriesState extends State<Categories> {
   }
 
   Future<void> fetchCategories() async {
-    final response = await http.get(Uri.parse('http://localhost:8081/mydealerBackend/public/api/productosTipoCategoria/P1'));
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/productosTipoCategoria/1'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);

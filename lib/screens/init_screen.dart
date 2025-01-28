@@ -47,14 +47,14 @@ class _InitScreenState extends State<InitScreen> {
         items: [
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              "assets/icons/Shop Icon.svg",
+              "assets/icons/Shop Icon.svg", // Cambiar esto por el ícono deseado
               colorFilter: const ColorFilter.mode(
                 inActiveIconColor,
                 BlendMode.srcIn,
               ),
             ),
             activeIcon: SvgPicture.asset(
-              "assets/icons/Shop Icon.svg",
+              "assets/icons/Shop Icon.svg", // Cambiar esto por el ícono deseado
               colorFilter: const ColorFilter.mode(
                 kPrimaryColor,
                 BlendMode.srcIn,
@@ -64,20 +64,20 @@ class _InitScreenState extends State<InitScreen> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              "assets/icons/Heart Icon.svg",
+              "assets/icons/Shopping Cart Icon.svg", // Ícono de carrito de compras para pedidos online
               colorFilter: const ColorFilter.mode(
                 inActiveIconColor,
                 BlendMode.srcIn,
               ),
             ),
             activeIcon: SvgPicture.asset(
-              "assets/icons/Heart Icon.svg",
+              "assets/icons/Shopping Cart Icon.svg", // Ícono de carrito de compras para pedidos online
               colorFilter: const ColorFilter.mode(
                 kPrimaryColor,
                 BlendMode.srcIn,
               ),
             ),
-            label: "Fav",
+            label: "Pedidos", // Cambié la etiqueta a "Pedidos"
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
@@ -111,7 +111,7 @@ class _InitScreenState extends State<InitScreen> {
                 BlendMode.srcIn,
               ),
             ),
-            label: "Fav",
+            label: "Perfil", // Cambié la etiqueta a "Perfil"
           ),
         ],
       ),
