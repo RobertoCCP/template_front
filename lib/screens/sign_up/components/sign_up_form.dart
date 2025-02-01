@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../components/custom_surfix_icon.dart';
-import '../../../components/form_error.dart';
 import '../../../constants.dart';
-import '../../complete_profile/complete_profile_screen.dart';
-import '../../sign_in/sign_in_screen.dart';
+import 'sign_up_form_2.dart';
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -20,150 +18,83 @@ class _SignUpFormState extends State<SignUpForm> {
   // Controladores para los campos de entrada
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _paisController = TextEditingController();
-  final TextEditingController _provinciaController = TextEditingController();
-  final TextEditingController _ciudadController = TextEditingController();
-  final TextEditingController _limiteCreditoController = TextEditingController();
-  final TextEditingController _saldoPendienteController = TextEditingController();
   final TextEditingController _cedulaRucController = TextEditingController();
-  final TextEditingController _codListaPrecioController = TextEditingController();
-  final TextEditingController _calificacionController = TextEditingController();
-  final TextEditingController _nombreComercialController = TextEditingController();
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  // Valores para los dropdown
-  String? _selectedCodTipoCliente;
-  String? _selectedCodFormaPago;
-  String? _selectedCodVendedor;
-  String? _selectedEstado;
+  final TextEditingController _nombreComercialController = TextEditingController();
 
   bool _isLoading = false;
-  final List<String?> errors = [];
-  
-  List<Map<String, dynamic>> _tiposClientes = [];
-  List<Map<String, dynamic>> _formasPago = [];
-  List<Map<String, dynamic>> _vendedores = [];
+  String? _emailError;
+  String? _cedulaError;
+  String? _loginError;
 
-  // Variables del formulario
-  String? email;
-  String? password;
+  // Método para verificar si el email, cedula o login ya están registrados
+  Future<void> _checkExistingValues() async {
+    setState(() {
+      _emailError = null;
+      _cedulaError = null;
+      _loginError = null;
+    });
 
-  void addError({String? error}) {
-    if (!errors.contains(error)) {
-      setState(() {
-        errors.add(error);
-      });
-    }
-  }
-
-  void removeError({String? error}) {
-    if (errors.contains(error)) {
-      setState(() {
-        errors.remove(error);
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDropdownData();
-  }
-
-  // Cargar datos de los dropdown desde la API
-  Future<void> _loadDropdownData() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final tiposClientesResponse = await http.get(Uri.parse('http://10.0.2.2:8000/api/tiposclientes'));
-      final formasPagoResponse = await http.get(Uri.parse('http://10.0.2.2:8000/api/formas-pago'));
-      final vendedoresResponse = await http.get(Uri.parse('http://10.0.2.2:8000/api/vendedor'));
+      // Realizar el GET a la API para obtener todos los clientes
+      final clientesResponse = await http.get(Uri.parse('http://10.0.2.2:8000/api/clientes'));
 
-      if (tiposClientesResponse.statusCode == 200) {
-        setState(() {
-          _tiposClientes = List<Map<String, dynamic>>.from(json.decode(tiposClientesResponse.body));
-        });
-      }
+      if (clientesResponse.statusCode == 200) {
+        final data = json.decode(clientesResponse.body);
 
-      if (formasPagoResponse.statusCode == 200) {
-        setState(() {
-          _formasPago = List<Map<String, dynamic>>.from(json.decode(formasPagoResponse.body));
-        });
-      }
+        if (data['datos'] != null && data['datos']['data'] != null) {
+          final clientes = List<Map<String, dynamic>>.from(data['datos']['data']);
 
-      if (vendedoresResponse.statusCode == 200) {
-        setState(() {
-          _vendedores = List<Map<String, dynamic>>.from(json.decode(vendedoresResponse.body)['datos']['data']);
-        });
+          bool emailExists = false;
+          bool loginExists = false;
+          bool cedulaExists = false;
+
+          // Verificar si el email, cédula o login ya existen
+          for (var cliente in clientes) {
+            if (cliente['email'] == _emailController.text) {
+              emailExists = true;
+            }
+            if (cliente['login'] == _loginController.text) {
+              loginExists = true;
+            }
+            if (cliente['cedularuc'] == _cedulaRucController.text) {
+              cedulaExists = true;
+            }
+          }
+
+          // Mostrar los mensajes de error correspondientes
+          if (emailExists) {
+            setState(() {
+              _emailError = "El correo electrónico ya está registrado";
+            });
+          }
+          if (loginExists) {
+            setState(() {
+              _loginError = "El nombre de usuario ya está registrado";
+            });
+          }
+          if (cedulaExists) {
+            setState(() {
+              _cedulaError = "La cédula o RUC ya está registrado";
+            });
+          }
+        } else {
+          print("No se encontraron datos de clientes.");
+        }
+      } else {
+        print("Error al obtener los datos: ${clientesResponse.statusCode}");
       }
     } catch (e) {
-      print('Error al cargar los datos: $e');
+      print("Error al hacer la solicitud: $e");
     } finally {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  // Generar el código del cliente basado en la Cédula/RUC
-  String _generateCodCliente() {
-    final cedulaRuc = _cedulaRucController.text;
-    return 'CLI-$cedulaRuc';
-  }
-
-  // Función para registrar al cliente
-  Future<void> _registrarCliente() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final codCliente = _generateCodCliente();
-
-    final url = Uri.parse('http://10.0.2.2:8000/api/clientes/register');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'codcliente': codCliente,
-        'codtipocliente': _selectedCodTipoCliente,
-        'nombre': _nombreController.text,
-        'email': _emailController.text,
-        'pais': _paisController.text,
-        'provincia': _provinciaController.text,
-        'ciudad': _ciudadController.text,
-        'codvendedor': _selectedCodVendedor,
-        'codformapago': _selectedCodFormaPago,
-        'estado': _selectedEstado,
-        'limitecredito': _limiteCreditoController.text,
-        'saldopendiente': _saldoPendienteController.text,
-        'cedularuc': _cedulaRucController.text,
-        'codlistaprecio': _codListaPrecioController.text,
-        'calificacion': _calificacionController.text,
-        'nombrecomercial': _nombreComercialController.text,
-        'login': _loginController.text,
-        'password': _passwordController.text,
-      }),
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cliente registrado con éxito!')),
-      );
-      Navigator.pushNamed(context, SignInScreen.routeName);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar cliente')),
-      );
     }
   }
 
@@ -175,27 +106,87 @@ class _SignUpFormState extends State<SignUpForm> {
         children: [
           TextFormField(
             controller: _nombreController,
-            keyboardType: TextInputType.text,
             decoration: const InputDecoration(
               labelText: "Nombre",
               hintText: "Ingresa tu nombre completo",
               floatingLabelBehavior: FloatingLabelBehavior.always,
               suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/User.svg"),
             ),
-            onSaved: (newValue) => _nombreController.text = newValue ?? "",
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El nombre es obligatorio';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 20),
           TextFormField(
             controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: "Email",
               hintText: "Ingresa tu correo electrónico",
               floatingLabelBehavior: FloatingLabelBehavior.always,
               suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/Mail.svg"),
             ),
-            onSaved: (newValue) => email = newValue,  // Definir variable email aquí
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El correo es obligatorio';
+              } else if (!_isValidEmail(value)) {
+                return 'El formato del correo es incorrecto';
+              }
+              return null;
+            },
           ),
+          const SizedBox(height: 5),
+          if (_emailError != null)
+            Text(
+              _emailError!,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _cedulaRucController,
+            decoration: InputDecoration(
+              labelText: "Cédula o RUC",
+              hintText: "Ingresa tu cédula o RUC",
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'La cédula o RUC es obligatorio';
+              } else if (!_isValidCedulaRuc(value)) {
+                return 'El formato de la cédula o RUC es incorrecto';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 5),
+          if (_cedulaError != null)
+            Text(
+              _cedulaError!,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _loginController,
+            decoration: InputDecoration(
+              labelText: "Usuario",
+              hintText: "Ingresa tu nuevo usuario",
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El usuario es obligatorio';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 5),
+          if (_loginError != null)
+            Text(
+              _loginError!,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
           const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
@@ -206,146 +197,18 @@ class _SignUpFormState extends State<SignUpForm> {
               floatingLabelBehavior: FloatingLabelBehavior.always,
               suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/Lock.svg"),
             ),
-            onSaved: (newValue) => password = newValue,  // Definir variable password aquí
-          ),
-          const SizedBox(height: 20),
-          // Dropdown para Tipo de Cliente
-          DropdownButtonFormField<String>(
-            value: _selectedCodTipoCliente,
-            decoration: InputDecoration(labelText: 'Tipo de Cliente'),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCodTipoCliente = newValue;
-              });
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'La contraseña es obligatoria';
+              } else if (value.length < 8 || value.length > 15) {
+                return 'La contraseña debe tener entre 8 y 15 caracteres';
+              } else if (!_containsSpecialChars(value)) {
+                return 'La contraseña debe contener al menos un carácter especial';
+              } else if (!_containsLetter(value)) {
+                return 'La contraseña debe contener al menos una letra';
+              }
+              return null;
             },
-            items: _tiposClientes.map<DropdownMenuItem<String>>((tipo) {
-              return DropdownMenuItem<String>(
-                value: tipo['codtipocliente'],
-                child: Text(tipo['descripcion']),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-          // Dropdown para Forma de Pago
-          DropdownButtonFormField<String>(
-            value: _selectedCodFormaPago,
-            decoration: InputDecoration(labelText: 'Forma de Pago'),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCodFormaPago = newValue;
-              });
-            },
-            items: _formasPago.map<DropdownMenuItem<String>>((forma) {
-              return DropdownMenuItem<String>(
-                value: forma['codformapago'],
-                child: Text(forma['nombre']),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-          // Dropdown para Vendedor
-          DropdownButtonFormField<String>(
-            value: _selectedCodVendedor,
-            decoration: InputDecoration(labelText: 'Vendedor'),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCodVendedor = newValue;
-              });
-            },
-            items: _vendedores.map<DropdownMenuItem<String>>((vendedor) {
-              return DropdownMenuItem<String>(
-                value: vendedor['codvendedor'],
-                child: Text(vendedor['nombre']),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-          // Dropdown para Estado
-          DropdownButtonFormField<String>(
-            value: _selectedEstado,
-            decoration: InputDecoration(labelText: 'Estado'),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedEstado = newValue;
-              });
-            },
-            items: [
-              DropdownMenuItem<String>(value: 'A', child: Text('Activo')),
-              DropdownMenuItem<String>(value: 'I', child: Text('Inactivo')),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Otros campos de entrada
-          TextFormField(
-            controller: _paisController,
-            decoration: const InputDecoration(
-              labelText: "País",
-              hintText: "Ingresa tu país",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _provinciaController,
-            decoration: const InputDecoration(
-              labelText: "Provincia",
-              hintText: "Ingresa tu provincia",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _ciudadController,
-            decoration: const InputDecoration(
-              labelText: "Ciudad",
-              hintText: "Ingresa tu ciudad",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _limiteCreditoController,
-            decoration: const InputDecoration(
-              labelText: "Límite de Crédito",
-              hintText: "Ingresa tu límite de crédito",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _saldoPendienteController,
-            decoration: const InputDecoration(
-              labelText: "Saldo Pendiente",
-              hintText: "Ingresa tu saldo pendiente",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _cedulaRucController,
-            decoration: const InputDecoration(
-              labelText: "Cédula o RUC",
-              hintText: "Ingresa tu cédula o RUC",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _codListaPrecioController,
-            decoration: const InputDecoration(
-              labelText: "Código Lista Precio",
-              hintText: "Ingresa el código de lista de precios",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _calificacionController,
-            decoration: const InputDecoration(
-              labelText: "Calificación",
-              hintText: "Ingresa tu calificación",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
           ),
           const SizedBox(height: 20),
           TextFormField(
@@ -355,24 +218,64 @@ class _SignUpFormState extends State<SignUpForm> {
               hintText: "Ingresa el nombre comercial",
               floatingLabelBehavior: FloatingLabelBehavior.always,
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El nombre comercial es obligatorio';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 20),
-          TextFormField(
-            controller: _loginController,
-            decoration: const InputDecoration(
-              labelText: "Login",
-              hintText: "Ingresa tu login",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Botón de Enviar
           ElevatedButton(
-            onPressed: _registrarCliente,
-            child: const Text("Continuar"),
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                // Verificar si el email, cedula o login ya están tomados
+                await _checkExistingValues();
+
+                if (_emailError == null && _cedulaError == null && _loginError == null) {
+                  // Si no hay errores, continuar a la siguiente pantalla
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SignUpForm2(
+                        nombre: _nombreController.text,
+                        email: _emailController.text,
+                        cedulaRuc: _cedulaRucController.text,
+                        login: _loginController.text,
+                        password: _passwordController.text,
+                        nombreComercial: _nombreComercialController.text,
+                      ),
+                    ),
+                  );
+                } else {
+                  // Mostrar mensaje de error si alguno de los datos está ocupado
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Correo, cédula o usuario ya registrados")),
+                  );
+                }
+              }
+            },
+            child: const Text("Siguiente"),
           ),
         ],
       ),
     );
+  }
+
+  bool _isValidEmail(String value) {
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(value);
+  }
+
+  bool _isValidCedulaRuc(String value) {
+    final cedulaRucRegex = RegExp(r'^\d{10}$'); // Esto es solo un ejemplo, adapta según el formato de cédula o RUC
+    return cedulaRucRegex.hasMatch(value);
+  }
+
+  bool _containsSpecialChars(String value) {
+    return RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value);
+  }
+  bool _containsLetter(String value) {
+  return RegExp(r'[a-zA-Z]').hasMatch(value);
   }
 }

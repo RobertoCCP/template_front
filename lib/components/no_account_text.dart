@@ -21,7 +21,7 @@ class NoAccountText extends StatelessWidget {
           onTap: () => Navigator.pushNamed(context, SignUpScreen.routeName),
           child: const Text(
             "Regístrate",
-            style: TextStyle(fontSize: 16, color: kPrimaryColor),
+            style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 67, 67)),
           ),
         ),
       ],

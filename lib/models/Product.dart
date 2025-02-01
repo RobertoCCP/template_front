@@ -33,7 +33,7 @@ List<Product> demoProducts = [
       "assets/images/ps4_console_white_4.png",
     ],
     colors: [
-      const Color(0xFFF6625E),
+      const Color.fromARGB(255, 246, 94, 94),
       const Color(0xFF836DB8),
       const Color(0xFFDECB9C),
       Colors.white,

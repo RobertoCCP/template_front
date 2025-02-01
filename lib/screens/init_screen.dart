@@ -56,7 +56,7 @@ class _InitScreenState extends State<InitScreen> {
             activeIcon: SvgPicture.asset(
               "assets/icons/Shop Icon.svg", // Cambiar esto por el ícono deseado
               colorFilter: const ColorFilter.mode(
-                kPrimaryColor,
+                Color.fromARGB(255, 255, 67, 67),
                 BlendMode.srcIn,
               ),
             ),
@@ -64,16 +64,16 @@ class _InitScreenState extends State<InitScreen> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              "assets/icons/Shopping Cart Icon.svg", // Ícono de carrito de compras para pedidos online
+              "assets/icons/task.svg", // Ícono de carrito de compras para pedidos online
               colorFilter: const ColorFilter.mode(
                 inActiveIconColor,
                 BlendMode.srcIn,
               ),
             ),
             activeIcon: SvgPicture.asset(
-              "assets/icons/Shopping Cart Icon.svg", // Ícono de carrito de compras para pedidos online
+              "assets/icons/task.svg", // Ícono de carrito de compras para pedidos online
               colorFilter: const ColorFilter.mode(
-                kPrimaryColor,
+                Color.fromARGB(255, 255, 67, 67),
                 BlendMode.srcIn,
               ),
             ),
@@ -90,7 +90,7 @@ class _InitScreenState extends State<InitScreen> {
             activeIcon: SvgPicture.asset(
               "assets/icons/Chat bubble Icon.svg",
               colorFilter: const ColorFilter.mode(
-                kPrimaryColor,
+                Color.fromARGB(255, 255, 67, 67),
                 BlendMode.srcIn,
               ),
             ),
@@ -107,7 +107,7 @@ class _InitScreenState extends State<InitScreen> {
             activeIcon: SvgPicture.asset(
               "assets/icons/User Icon.svg",
               colorFilter: const ColorFilter.mode(
-                kPrimaryColor,
+                Color.fromARGB(255, 255, 67, 67),
                 BlendMode.srcIn,
               ),
             ),
