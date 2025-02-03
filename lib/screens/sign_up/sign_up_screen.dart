@@ -35,15 +35,15 @@ class SignUpScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SocalCard(
-                        icon: "assets/icons/google-icon.svg",
+                        icon: "assets/icons/googleicon.svg",
                         press: () {},
                       ),
                       SocalCard(
-                        icon: "assets/icons/facebook-2.svg",
+                        icon: "assets/icons/facebook2.svg",
                         press: () {},
                       ),
                       SocalCard(
-                        icon: "assets/icons/twitter.svg",
+                        icon: "assets/icons/twitte.svg",
                         press: () {},
                       ),
                     ],

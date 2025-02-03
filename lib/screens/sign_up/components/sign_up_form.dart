@@ -152,13 +152,14 @@ class _SignUpFormState extends State<SignUpForm> {
               floatingLabelBehavior: FloatingLabelBehavior.always,
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'La cédula o RUC es obligatorio';
-              } else if (!_isValidCedulaRuc(value)) {
-                return 'El formato de la cédula o RUC es incorrecto';
-              }
-              return null;
-            },
+  if (value == null || value.isEmpty) {
+    return 'La cédula o RUC es obligatorio';
+  } else if (!_isValidCedulaRuc(value)) {
+    return _cedulaError;
+  }
+  return null;
+},
+
           ),
           const SizedBox(height: 5),
           if (_cedulaError != null)
@@ -267,15 +268,54 @@ class _SignUpFormState extends State<SignUpForm> {
     return emailRegex.hasMatch(value);
   }
 
-  bool _isValidCedulaRuc(String value) {
-    final cedulaRucRegex = RegExp(r'^\d{10}$'); // Esto es solo un ejemplo, adapta según el formato de cédula o RUC
-    return cedulaRucRegex.hasMatch(value);
-  }
-
   bool _containsSpecialChars(String value) {
     return RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value);
   }
   bool _containsLetter(String value) {
   return RegExp(r'[a-zA-Z]').hasMatch(value);
   }
+
+bool _isValidCedulaRuc(String value) {
+  if (value.length == 10) {
+    if (!_isValidEcuadorianCedula(value)) {
+      _cedulaError = "La cédula ingresada no es válida.";
+      return false;
+    }
+  } else if (value.length == 13) {
+    if (!RegExp(r'^\d{13}$').hasMatch(value)) {
+      _cedulaError = "El RUC ingresado debe ser un número válido de 13 dígitos.";
+      return false;
+    }
+  } else {
+    _cedulaError = "La cédula debe tener exactamente 10 dígitos o el RUC 13 dígitos.";
+    return false;
+  }
+  return true;
+}
+
+bool _isValidEcuadorianCedula(String cedula) {
+  if (!RegExp(r'^\d{10}$').hasMatch(cedula)) {
+    return false;
+  }
+
+  int provinceCode = int.parse(cedula.substring(0, 2));
+  if (provinceCode < 1 || provinceCode > 24) {
+    return false;
+  }
+
+  List<int> coefficients = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+  int sum = 0;
+
+  for (int i = 0; i < 9; i++) {
+    int value = int.parse(cedula[i]) * coefficients[i];
+    sum += (value >= 10) ? value - 9 : value;
+  }
+
+  int lastDigit = int.parse(cedula[9]);
+  int calculatedDigit = (sum % 10 == 0) ? 0 : 10 - (sum % 10);
+
+  return lastDigit == calculatedDigit;
+}
+
+
 }
