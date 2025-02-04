@@ -81,4 +81,33 @@ class ApiService {
       return [];
     }
   }
+
+  Future<List<Map<String, String>>> getCategories() async {
+  try {
+    final response = await http.get(
+      Uri.parse('$loginBaseUrl/productos/categoria'), // Ruta de categorías
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      
+      // Verifica que la respuesta contiene las categorías
+      List<Map<String, String>> categories = [];
+      if (jsonResponse['datos'] != null) {
+        for (var category in jsonResponse['datos']) {
+          categories.add({
+            'codtipoproducto': category['codtipoproducto'] ?? '0', // Asegúrate de que codtipoproducto no sea null
+            'descripcion': category['descripcion'] ?? 'Categoría desconocida', // Asegúrate de que la descripción no sea null
+          });
+        }
+      }
+      return categories;
+    } else {
+      throw Exception('Error al obtener categorías');
+    }
+  } catch (e) {
+    throw Exception('Error de conexión: $e');
+  }
+}
 }
