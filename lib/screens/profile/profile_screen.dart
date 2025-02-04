@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../profile/my_account_screeen.dart';
 
 import 'components/profile_menu.dart';
 import 'components/profile_pic.dart';
@@ -20,9 +21,10 @@ class ProfileScreen extends StatelessWidget {
             const ProfilePic(),
             const SizedBox(height: 20),
             ProfileMenu(
-              text: "My Account",
+              text: "Mi Cuenta",
               icon: "assets/icons/User Icon.svg",
-              press: () => {},
+              press: () =>
+                  {Navigator.pushNamed(context, MyAccountScreen.routeName)},
             ),
             ProfileMenu(
               text: "Notifications",

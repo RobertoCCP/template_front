@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/services/api_service.dart';
+import 'package:shop_app/services/user_preferences.dart';
 
 import '../../../components/custom_surfix_icon.dart';
 import '../../../components/form_error.dart';
@@ -16,7 +18,7 @@ class SignForm extends StatefulWidget {
 
 class _SignFormState extends State<SignForm> {
   final _formKey = GlobalKey<FormState>();
-  String? email;
+  String? login; // Cambiar email por login
   String? password;
   bool? remember = false;
   final List<String?> errors = [];
@@ -44,31 +46,26 @@ class _SignFormState extends State<SignForm> {
       child: Column(
         children: [
           TextFormField(
-            keyboardType: TextInputType.emailAddress,
-            onSaved: (newValue) => email = newValue,
+            keyboardType: TextInputType.text,
+            onSaved: (newValue) => login = newValue,
             onChanged: (value) {
               if (value.isNotEmpty) {
-                removeError(error: kEmailNullError);
-              } else if (emailValidatorRegExp.hasMatch(value)) {
-                removeError(error: kInvalidEmailError);
+                removeError(error: kLoginNullError);
               }
               return;
             },
             validator: (value) {
               if (value!.isEmpty) {
-                addError(error: kEmailNullError);
-                return "";
-              } else if (!emailValidatorRegExp.hasMatch(value)) {
-                addError(error: kInvalidEmailError);
+                addError(error: kLoginNullError);
                 return "";
               }
               return null;
             },
             decoration: const InputDecoration(
-              labelText: "Correo Electrónico",
-              hintText: "Ingresa tu correo electrónico",
+              labelText: "Usuario",
+              hintText: "Ingrese su usuario",
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/Mail.svg"),
+              suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/User.svg"),
             ),
           ),
           const SizedBox(height: 20),
@@ -127,12 +124,35 @@ class _SignFormState extends State<SignForm> {
           FormError(errors: errors),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState!.validate()) {
                 _formKey.currentState!.save();
-                // Si todo es válido, se navega a la pantalla de éxito
                 KeyboardUtil.hideKeyboard(context);
-                Navigator.pushNamed(context, LoginSuccessScreen.routeName);
+                try {
+                  final apiService = ApiService();
+                  final usuario =
+                      await apiService.loginCliente(login!, password!);
+
+                  if (usuario.codcliente.isNotEmpty) {
+                    try {
+                      await UserPreferences().saveUsuario(usuario);
+                      Navigator.pushNamed(
+                          context, LoginSuccessScreen.routeName);
+                    } catch (e) {
+                      print("Error guardando preferencias: $e");
+                      // Continuar con la navegación aunque falle el guardado
+                      Navigator.pushNamed(
+                          context, LoginSuccessScreen.routeName);
+                    }
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: const Text("Continuar"),
@@ -141,4 +161,5 @@ class _SignFormState extends State<SignForm> {
       ),
     );
   }
+  
 }

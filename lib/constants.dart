@@ -32,6 +32,8 @@ const String kMatchPassError = "Las contraseñas no coinciden";
 const String kNamelNullError = "Por favor, ingresa tu nombre";
 const String kPhoneNumberNullError = "Por favor, ingresa tu número de teléfono";
 const String kAddressNullError = "Por favor, ingresa tu dirección";
+const String kLoginNullError = "Por favor ingrese su usuario";
+const String kInvalidLoginError = "Usuario inválido";
 
 final otpInputDecoration = InputDecoration(
   contentPadding: const EdgeInsets.symmetric(vertical: 16),
